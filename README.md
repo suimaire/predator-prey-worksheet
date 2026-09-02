@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-브라우저에서 `http://127.0.0.1:5173/predator-prey-simulation-2/`를 엽니다.
+브라우저에서 `http://127.0.0.1:5173/predator-prey-worksheet/`를 엽니다.
 
 ## 포함 기능
 
@@ -32,6 +32,6 @@ npm run build
 
 `.github/workflows/deploy.yml`이 포함되어 있습니다. 저장소의 **Settings → Pages → Build and deployment**에서 Source를 **GitHub Actions**로 선택한 뒤 `main` 브랜치에 push하면 테스트와 빌드 후 자동 배포됩니다.
 
-배포 주소: <https://suimaire.github.io/predator-prey-simulation-2/>
+배포 주소: <https://suimaire.github.io/predator-prey-worksheet/>
 
-현재 `vite.config.ts`의 기본 경로는 `/predator-prey-simulation-2/`입니다. GitHub 저장소 이름이 다르면 이 값을 `/<저장소 이름>/`으로 바꾸세요.
+현재 `vite.config.ts`의 기본 경로는 새 저장소 이름과 같은 `/predator-prey-worksheet/`입니다.
