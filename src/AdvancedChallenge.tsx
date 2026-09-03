@@ -1,6 +1,21 @@
-import type { AdvancedAnswerField, AdvancedAnswers } from './worksheet';
+import { useState } from 'react';
+import { ADVANCED_UNLOCK_KEY, isAdvancedAccessCode, type AdvancedAnswerField, type AdvancedAnswers } from './worksheet';
 
 const LAB_URL = 'https://suimaire.github.io/predator-prey-simulation/';
+
+function readUnlocked(): boolean {
+  try {
+    return window.sessionStorage.getItem(ADVANCED_UNLOCK_KEY) === 'true';
+  } catch {
+    return false; // 저장소를 쓸 수 없는 환경에서는 잠금 상태로 시작합니다.
+  }
+}
+
+function rememberUnlocked(): void {
+  try {
+    window.sessionStorage.setItem(ADVANCED_UNLOCK_KEY, 'true');
+  } catch { /* 저장에 실패해도 이번 방문에서는 계속 열어 둡니다. */ }
+}
 
 type AdvancedChallengeProps = {
   answers: AdvancedAnswers;
@@ -37,20 +52,74 @@ function AdvancedFeedback({ show, correct, children }: { show: boolean; correct:
 
 export default function AdvancedChallenge({ answers, checks, open, onToggle, onChange, onReveal }: AdvancedChallengeProps) {
   const advancedScore = checks.filter(Boolean).length;
+  const [unlocked, setUnlocked] = useState(readUnlocked);
+  const [codeOpen, setCodeOpen] = useState(false);
+  const [code, setCode] = useState('');
+  const [codeError, setCodeError] = useState('');
+
+  const tryUnlock = () => {
+    if (!isAdvancedAccessCode(code)) {
+      setCodeError('코드가 올바르지 않습니다.');
+      return;
+    }
+    rememberUnlocked();
+    setUnlocked(true);
+    setCodeOpen(false);
+    setCodeError('');
+    setCode('');
+    if (!open) onToggle();
+  };
+
+  const submitCode = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault(); // 새로고침을 막아 작성한 답안을 지키기 위해 필요합니다.
+    tryUnlock();
+  };
+
+  const handleCodeKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault(); // 기본 제출 동작에 기대지 않고 Enter를 직접 처리합니다.
+    tryUnlock();
+  };
 
   return (
     <section className={`optional-challenge ${open ? 'is-open' : ''}`} aria-labelledby="challenge-title">
       <div className="challenge-gate">
-        <div className="challenge-badges"><span>OPTIONAL CHALLENGE</span><b>선택 심화</b></div>
+        <div className="challenge-badges"><span>OPTIONAL CHALLENGE</span><b>선택 심화</b>{!unlocked && <b className="lock-badge">코드 필요</b>}</div>
         <div className="challenge-gate-copy">
           <p>기본 20분 활동을 마친 뒤, 더 탐구하고 싶은 학생을 위한 선택 활동입니다.</p>
           <h2 id="challenge-title">심화 도전: 생태계의 규칙을 수학으로 읽어 보자</h2>
           <span className="challenge-time"><span aria-hidden="true">◷</span> 예상 시간 약 3~5분 · 기본 진행률에 포함되지 않아요</span>
         </div>
-        <button type="button" className="challenge-toggle" aria-expanded={open} aria-controls="challenge-body" onClick={onToggle}>
-          <span>{open ? '심화 활동 접기' : '수학으로 한 단계 더 들어가 볼까요?'}</span>
-          <b>{open ? '접기' : '심화 활동 펼치기'} <i aria-hidden="true">{open ? '↑' : '↓'}</i></b>
-        </button>
+        {unlocked ? (
+          <button type="button" className="challenge-toggle" aria-expanded={open} aria-controls="challenge-body" onClick={onToggle}>
+            <span>{open ? '심화 활동 접기' : '수학으로 한 단계 더 들어가 볼까요?'}</span>
+            <b>{open ? '접기' : '심화 활동 펼치기'} <i aria-hidden="true">{open ? '↑' : '↓'}</i></b>
+          </button>
+        ) : (
+          <button type="button" className="challenge-toggle" aria-expanded={codeOpen} aria-controls="challenge-code" onClick={() => setCodeOpen((previous) => !previous)}>
+            <span>선생님이 알려 준 코드를 입력하면 열려요</span>
+            <b>🔒 심화 활동 펼치기 <i aria-hidden="true">{codeOpen ? '↑' : '↓'}</i></b>
+          </button>
+        )}
+        {!unlocked && codeOpen && (
+          <form className="challenge-code" id="challenge-code" onSubmit={submitCode}>
+            <label htmlFor="advanced-code">심화 활동 코드</label>
+            <div className="challenge-code-row">
+              <input
+                id="advanced-code"
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                value={code}
+                onChange={(event) => { setCode(event.target.value); setCodeError(''); }}
+                onKeyDown={handleCodeKeyDown}
+                aria-describedby={codeError ? 'advanced-code-error' : undefined}
+              />
+              <button type="submit">확인</button>
+            </div>
+            <p className="challenge-code-error" id="advanced-code-error" role="alert">{codeError}</p>
+          </form>
+        )}
       </div>
 
       {open && (
