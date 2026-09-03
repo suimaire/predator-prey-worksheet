@@ -82,6 +82,7 @@ export default function AdvancedChallenge({ answers, checks, open, onToggle, onC
               <i>−</i>
               <span className="equation-term loss-term"><b>βNP</b><small>포식으로 피식자를 감소시키는 부분</small></span>
             </div>
+            <p className="math-note">이 식은 활동 3에서 사용한 <strong>More realistic model</strong>(환경수용력 K가 포함된 확장 모형)의 피식자 방정식입니다. 실험실의 <strong>Basic model</strong>은 (1 − N/K) 없이 dN/dt = αN − βNP를 사용합니다.</p>
 
             <fieldset className="question advanced-question"><legend><span>11</span>다음 중 αN(1 − N/K)가 의미하는 것에 가장 가까운 것은?</legend><AdvancedChoices name="advanced-growth" value={answers.advancedPreyGrowth} onChange={(value) => onChange('advancedPreyGrowth', value)} options={[{value:'A',label:'A',detail:'포식자에게 먹혀 감소하는 피식자'},{value:'B',label:'B',detail:'환경의 제한을 받으면서 피식자가 스스로 증가하는 과정'},{value:'C',label:'C',detail:'포식자의 자연 사망'},{value:'D',label:'D',detail:'포식자가 피식자를 먹고 증가하는 과정'}]} /><AdvancedFeedback show={answers.advancedRevealed} correct={checks[0]}>αN(1 − N/K)는 환경의 제한을 받으면서 피식자가 스스로 증가하는 과정을 나타냅니다.</AdvancedFeedback></fieldset>
 
@@ -115,7 +116,7 @@ export default function AdvancedChallenge({ answers, checks, open, onToggle, onC
           <section className="math-step" aria-labelledby="simulation-link-title">
             <div className="math-step-heading"><b>6</b><div><span>시뮬레이션과 다시 연결</span><h3 id="simulation-link-title">앞에서 바꾼 γ를 식으로 예측해 봅시다</h3></div></div>
             <div className="simulation-reconnect"><div><b>dP/dt = δNP − <em>γP</em></b><p>γ는 포식자 자연 사망률입니다.</p></div><a href={LAB_URL} target="_blank" rel="noopener noreferrer">실험실 다시 보기 <span aria-hidden="true">↗</span></a></div>
-            <fieldset className="question advanced-question open-question"><legend><span>15</span>이 식만 보고도 γ가 증가했을 때 포식자 개체군에 나타날 직접적인 효과를 설명하세요.</legend><label className="text-field"><textarea rows={3} value={answers.advancedGammaEffect} onChange={(event) => onChange('advancedGammaEffect', event.target.value)} placeholder="−γP 항의 크기가 어떻게 달라지는지 연결해 보세요." /></label>{answers.advancedRevealed && <div className="model-answer emphasized"><b>핵심 해설</b><p>γ가 증가하면 −γP 항의 크기가 커지므로 다른 조건이 같을 때 포식자 개체수를 감소시키는 효과가 커집니다. 달라진 포식 압력은 다시 피식자에게 간접적으로 영향을 줄 수 있습니다.</p></div>}</fieldset>
+            <fieldset className="question advanced-question open-question"><legend><span>15</span>이 식만 보고도 γ를 0.60에서 0.75로 높였을 때 포식자 개체군에 나타날 직접적인 효과를 설명하세요.</legend><label className="text-field"><textarea rows={3} value={answers.advancedGammaEffect} onChange={(event) => onChange('advancedGammaEffect', event.target.value)} placeholder="−γP 항의 크기가 어떻게 달라지는지 연결해 보세요." /></label>{answers.advancedRevealed && <div className="model-answer emphasized"><b>핵심 해설</b><p>γ가 증가하면 −γP 항의 크기가 커지므로 다른 조건이 같을 때 포식자 개체수를 감소시키는 효과가 커집니다. 달라진 포식 압력은 다시 피식자에게 간접적으로 영향을 줄 수 있습니다.</p></div>}</fieldset>
           </section>
 
           <section className="math-step" aria-labelledby="translation-title">
