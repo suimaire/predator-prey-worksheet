@@ -198,6 +198,9 @@ export default function Home() {
   return (
     <main>
       <header className="hero" id="top">
+        <nav className="portal-nav" aria-label="과학 수업 포털 안내">
+          <a className="portal-link" href="https://suimaire.github.io/" aria-label="과학 수업 포털로 돌아가기">← 과학 수업 포털</a>
+        </nav>
         <nav className="topbar" aria-label="학습지 도구">
           <a className="brand" href="#top" aria-label="학습지 맨 위로"><span className="brand-mark" aria-hidden="true">↝</span><span>통합과학2 · 자료 해석</span></a>
           <span className="total-time"><span aria-hidden="true">◷</span> 예상 활동 시간 <b>약 20분</b></span>
