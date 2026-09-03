@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/predator-prey-worksheet/',
+  base: '/predator-prey-simulation-2/',
 });
