@@ -345,7 +345,7 @@ export default function Home() {
             onChange={setAdvancedField}
             onReveal={revealAdvancedAnswers}
           />
-          <footer><p>이 학습지는 시뮬레이션 결과를 해석하기 위한 활동지입니다. 시뮬레이션은 현실 생태계를 단순화한 수학적 모델입니다.</p><span data-page-views="" hidden /><button type="button" onClick={resetWorksheet}>학습지 초기화</button></footer>
+          <footer><p>이 학습지는 시뮬레이션 결과를 해석하기 위한 활동지입니다. 시뮬레이션은 현실 생태계를 단순화한 수학적 모델입니다.</p><div className="footer-brand"><strong>HAFS Biology Lab</strong><span>Teacher-built interactive science tools · CH Park</span></div><span data-page-views="" hidden /><button type="button" onClick={resetWorksheet}>학습지 초기화</button></footer>
         </section>
       </div>
     </main>
