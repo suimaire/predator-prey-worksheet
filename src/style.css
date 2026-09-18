@@ -258,6 +258,10 @@ footer button { flex: 0 0 auto; border: 0; color: #7b8880; background: transpare
 .footer-brand { display: grid; flex: 0 0 auto; line-height: 1.5; }
 .footer-brand strong { color: #56635b; font-size: 11px; font-weight: 800; }
 .footer-brand span { font-size: 9px; }
+/* 공통 조회수(page-views.js)의 today/total span 을 두 줄로 쌓는다. 이 페이지 전용 */
+footer [data-page-views] { flex: 0 0 auto; }
+footer .page-views__today, footer .page-views__total { display: block; white-space: nowrap; }
+footer .page-views__sep { display: none; }
 
 @media (max-width: 800px) {
   .mobile-progress { position: sticky; top: 0; z-index: 20; display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 10px 20px; color: #fff; background: rgba(18,60,41,.95); backdrop-filter: blur(8px); font-size: 10px; }
