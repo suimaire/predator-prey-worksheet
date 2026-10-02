@@ -62,11 +62,10 @@ const activityMeta = [
 
 function ActivityHeader({ number, eyebrow, title, time }: { number: number; eyebrow: string; title: string; time: string }) {
   return (
-    <div className="activity-heading">
-      <div className="activity-number" aria-hidden="true">{String(number).padStart(2, '0')}</div>
-      <div><p className="activity-kicker">활동 {number} / 5 · {eyebrow}</p><h2>{title}</h2></div>
-      <span className="time-badge"><span aria-hidden="true">◷</span> {time}</span>
-    </div>
+    <header className="activity-head">
+      <p className="activity-label"><b>활동 {number}</b> {eyebrow}<span className="activity-time">{time}</span></p>
+      <h2>{title}</h2>
+    </header>
   );
 }
 
@@ -76,13 +75,15 @@ function RadioCards({ name, value, options, onChange }: {
   options: { value: string; label: string; detail?: string }[];
   onChange: (value: string) => void;
 }) {
+  // 기호(A~D)가 있는 보기는 기호를 선택 표시로 쓰고, 문장을 본문 크기로 보여 줍니다.
   return (
-    <div className="radio-cards">
+    <div className="choices">
       {options.map((option) => (
         <label key={option.value} className={value === option.value ? 'selected' : ''}>
           <input type="radio" name={name} value={option.value} checked={value === option.value} onChange={() => onChange(option.value)} />
-          <span className="radio-dot" aria-hidden="true" />
-          <span><b>{option.label}</b>{option.detail && <small>{option.detail}</small>}</span>
+          {option.detail
+            ? <><span className="choice-mark" aria-hidden="true">{option.label}</span><span className="choice-text">{option.detail}</span></>
+            : <><span className="choice-dot" aria-hidden="true" /><span className="choice-text">{option.label}</span></>}
         </label>
       ))}
     </div>
@@ -91,13 +92,14 @@ function RadioCards({ name, value, options, onChange }: {
 
 function Feedback({ show, correct, children }: { show: boolean; correct: boolean; children: React.ReactNode }) {
   if (!show) return null;
-  return <div className={`feedback ${correct ? 'correct' : 'review'}`}><b>{correct ? '확인했어요' : '다시 살펴보세요'}</b><p>{children}</p></div>;
+  return <div className={`feedback ${correct ? 'correct' : 'review'}`}><b>{correct ? '맞았어요' : '다시 살펴보세요'}</b><p>{children}</p></div>;
 }
 
 function LabLink({ compact = false }: { compact?: boolean }) {
   return (
     <a className={compact ? 'lab-button compact' : 'lab-button'} href={LAB_URL} target="_blank" rel="noopener noreferrer">
       {compact ? '실험실 열기' : '포식자-피식자 동역학 실험실 열기'} <span aria-hidden="true">↗</span>
+      <span className="visually-hidden">(새 탭)</span>
     </a>
   );
 }
@@ -197,39 +199,42 @@ export default function Home() {
 
   return (
     <main>
-      <header className="hero" id="top">
-        <nav className="portal-nav" aria-label="과학 수업 포털 안내">
-          <a className="portal-link" href="https://suimaire.github.io/" aria-label="과학 수업 포털로 돌아가기">← 과학 수업 포털</a>
-        </nav>
-        <nav className="topbar" aria-label="학습지 도구">
-          <a className="brand" href="#top" aria-label="학습지 맨 위로"><span className="brand-mark" aria-hidden="true">↝</span><span>통합과학2 · 자료 해석</span></a>
-          <span className="total-time"><span aria-hidden="true">◷</span> 예상 활동 시간 <b>약 20분</b></span>
-        </nav>
-        <div className="hero-content">
-          <p className="eyebrow">PREDATOR–PREY WORKSHEET</p>
-          <h1>포식자와 피식자,<br /><em>누가 먼저 변할까?</em></h1>
-          <p className="subtitle">포식자-피식자 동역학 자료 해석 활동</p>
-          <p className="intro">아래 문제를 먼저 읽고 스스로 답해 보세요. 그래프가 필요하거나 자신의 예상이 맞는지 확인하고 싶을 때 시뮬레이션을 사용해도 됩니다.</p>
-          <div className="lab-entry"><LabLink /><span>지금 열지 않아도 괜찮아요 · 필요할 때 사용하세요</span></div>
-          <p className="time-note"><span aria-hidden="true">✓</span> 시간 표시는 활동 분량 안내용이며, 제한 시간이 아닙니다.</p>
+      <header className="page-header" id="top">
+        <div className="page-header-inner">
+          <nav className="crumbs" aria-label="현재 위치">
+            <a href="https://suimaire.github.io/">과학 수업 포털</a>
+            <span aria-hidden="true">/</span>
+            <span>통합과학2 · 생태계와 개체군</span>
+          </nav>
+          <h1>포식자와 피식자, 누가 먼저 변할까?</h1>
+          <p className="lead">그래프를 읽고 실험실에서 확인한 뒤, 개체수 변화의 순서를 내 말로 설명해 봅니다. 문제를 먼저 풀고, 예상이 맞는지 궁금할 때 실험실을 여세요.</p>
+          <ul className="facts">
+            <li><b>활동</b>5개 · 12문항</li>
+            <li><b>시간</b>20분 정도</li>
+            <li><b>저장</b>쓴 답은 이 브라우저에 자동 저장</li>
+          </ul>
+          <LabLink />
         </div>
       </header>
 
-      <div className="mobile-progress" aria-label={`현재 활동 ${currentActivity}, 완료 ${completedCount}개`}>
-        <span>활동 {currentActivity} / 5</span><div><i style={{ width: `${(completedCount / 5) * 100}%` }} /></div><b>{completedCount}개 작성</b>
+      <div className="mobile-progress" aria-label={`현재 활동 ${currentActivity}, 5개 중 ${completedCount}개 작성`}>
+        <span>활동 {currentActivity}/5</span><div><i style={{ width: `${(completedCount / 5) * 100}%` }} /></div><b>{completedCount}/5 작성</b>
       </div>
 
       <div className="page-shell">
-        <aside className="progress-rail" aria-label="활동 진행 순서">
-          <div className="progress-title"><p>활동 진행</p><span>{completedCount} / 5 작성</span></div>
+        <aside className="progress-rail" aria-label="활동 순서">
+          <p className="progress-title">활동 순서 <span>{completedCount}/5 작성</span></p>
           <ol>
             {activityMeta.map((item, index) => (
               <li key={item.id} className={`${currentActivity === item.id ? 'current' : ''} ${completion[index] ? 'done' : ''}`}>
-                <a href={`#activity-${item.id}`}><b>{completion[index] ? '✓' : item.id}</b><span>{item.label}<small>{item.time}</small></span></a>
+                <a href={`#activity-${item.id}`} aria-current={currentActivity === item.id ? 'step' : undefined}>
+                  <b aria-hidden="true">{completion[index] ? '✓' : item.id}</b>
+                  <span>{item.label}<small>{completion[index] ? '작성함' : item.time}</small></span>
+                </a>
               </li>
             ))}
           </ol>
-          <button type="button" className="reset-button" onClick={resetWorksheet}>학습지 초기화</button>
+          <button type="button" className="reset-button" onClick={resetWorksheet}>쓴 답 모두 지우기</button>
         </aside>
 
         <section className="worksheet" aria-label="포식자와 피식자 학습 활동">
@@ -237,7 +242,7 @@ export default function Home() {
             <ActivityHeader number={1} eyebrow="그래프 해석" title="두 곡선의 정체를 추론해 보자" time="약 4분" />
             <p className="activity-lead">아래 그래프는 서로 영향을 주는 두 개체군 A와 B의 변화를 나타냅니다. 아직 범례는 숨겨져 있습니다. 정점과 최저점이 나타나는 <strong>시간적 순서</strong>에 주목하세요.</p>
             <figure className="mystery-chart">
-              <figcaption><div><b>개체군의 상대적 변화</b><span>선의 높이보다 변화의 순서를 살펴보세요.</span></div><div className="line-key" aria-label="곡선 구분"><span className="key-a">A</span><span className="key-b">B</span></div></figcaption>
+              <figcaption><div><b>개체군의 상대적 변화</b><span>선의 높이보다 변화의 순서를 살펴보세요.</span></div><div className="line-key" aria-label="곡선 구분"><span className="key-a"><i aria-hidden="true" />A (실선)</span><span className="key-b"><i aria-hidden="true" />B (점선)</span></div></figcaption>
               <div className="chart-scroll">
                 <svg viewBox="0 0 760 300" role="img" aria-labelledby="chart-title chart-desc">
                   <title id="chart-title">개체군 A와 B의 주기적 변화 그래프</title><desc id="chart-desc">실선 A가 점선 B보다 먼저 정점과 최저점에 도달합니다.</desc>
@@ -249,7 +254,7 @@ export default function Home() {
                   <text x="718" y="279">시간</text><text x="22" y="195" transform="rotate(-90 22 195)">상대적 개체수</text>
                 </svg>
               </div>
-              <p className="chart-note"><span aria-hidden="true">ⓘ</span> A와 B는 비교를 위한 상대적 척도입니다. 평균 개체수만으로 정체를 판단할 수 없습니다.</p>
+              <p className="chart-note">A와 B는 비교를 위한 상대적 척도입니다. 평균 개체수만으로 정체를 판단할 수 없습니다.</p>
             </figure>
 
             <div className="questions">
@@ -278,20 +283,24 @@ export default function Home() {
 
           <article className="activity-card" id="activity-3">
             <ActivityHeader number={3} eyebrow="변인 탐구" title="한 변인의 변화가 어디까지 퍼질까?" time="약 6분" />
-            <div className="experiment-callout"><div><span>예상 → 확인 → 설명</span><h3>먼저 예상한 뒤, 필요하면 실험실을 열어 확인하세요.</h3><p>실험실이 새 탭에서 열립니다. 관찰을 마치면 이 학습지 탭으로 돌아오세요.</p></div><LabLink compact /></div>
-            <div className="variable-card"><span>이번에 바꿀 변수</span><b><i>γ</i> 포식자 자연 사망률</b><p>다른 조건은 모두 그대로 두고 <strong>γ만 0.60 → 0.75</strong>로 바꿉니다(약 25% 증가).</p></div>
-            <section className="setup-card" aria-labelledby="setup-title">
-              <div className="setup-heading"><span aria-hidden="true">⚙</span><div><small>실험 조건 맞추기</small><h3 id="setup-title">모든 학생이 똑같은 조건에서 시작합니다</h3></div></div>
-              <ul>
-                <li><b>모형</b><span>실험실 오른쪽 위에서 <strong>More realistic model</strong>을 선택합니다. 왼쪽 <em>사용 중인 방정식</em> 카드에 <strong>환경수용력 포함</strong>이라고 표시되고 피식자 식이 <code>dN/dt = αN(1 − N/K) − βNP</code>로 바뀌면 준비된 것입니다.</span></li>
-                <li><b>기본값</b><span>왼쪽 패널의 <strong>기본값으로 돌아가기</strong>를 눌러 α 0.80, β 0.040, δ 0.020, <strong>γ 0.60</strong>, K 180, 피식자 40, 포식자 9로 맞춥니다.</span></li>
-                <li><b>바꿀 값</b><span>두 번째 실행에서는 <strong>γ만 0.75</strong>로 바꿉니다. 나머지 값과 초기 개체수는 건드리지 않습니다.</span></li>
-              </ul>
-              <p className="setup-note"><span aria-hidden="true">ⓘ</span> 이 실험실은 같은 모형·같은 값·같은 초기 개체수라면 언제 실행해도 똑같은 그래프가 나옵니다. 결과가 다르게 보인다면 바꾸지 않기로 한 값이 함께 바뀐 것입니다. <strong>Prediction Mode</strong>를 열면 모형이 자동으로 Basic model로 돌아가므로, 이 활동에서는 열지 않습니다.</p>
-            </section>
+            <p className="activity-lead">이번에는 <strong>포식자 자연 사망률 γ</strong> 하나만 0.60에서 0.75로 높여 봅니다(약 25% 증가). 먼저 결과를 예상하고, 실험실에서 확인한 다음, 왜 그런지 설명하세요.</p>
             <div className="questions">
-              <fieldset className="question"><legend><span>7</span>γ를 0.60에서 0.75로 높이면 포식자 개체군에 가장 직접적으로 나타나는 변화는?</legend><RadioCards name="gamma" value={answers.gammaPrediction} onChange={(value) => setField('gammaPrediction', value)} options={[{value:'A',label:'A',detail:'포식자가 더 오래 산다.'},{value:'B',label:'B',detail:'같은 포식자 수에서도 자연적으로 줄어드는 양이 커져,\n포식자가 늘어나기에 불리해진다.'},{value:'C',label:'C',detail:'피식자의 자연 증가율이 직접 감소한다.'},{value:'D',label:'D',detail:'환경수용력이 증가한다.'}]} /><Feedback show={answers.revealed} correct={checks[5]}>γ는 포식자가 자연적으로 줄어드는 정도이므로, γ가 커지면 같은 포식자 수에서도 손실이 커져 포식자의 순증가에 불리하게 작용합니다. 다만 이것은 직접 효과이고, 실제 그래프의 최종 모습은 피식자와의 상호작용까지 함께 계산된 결과입니다.</Feedback></fieldset>
-              <section className="protocol" aria-labelledby="protocol-title"><div className="protocol-heading"><span aria-hidden="true">↻</span><div><small>실험 절차</small><h3 id="protocol-title">한 번에 하나의 변수만 바꾸기</h3></div></div><ol><li><b>1</b>More realistic model 선택</li><li><b>2</b>기본값으로 돌아가기(γ = 0.60)</li><li><b>3</b>Run을 눌러 20년 관찰</li><li><b>4</b>γ만 0.75로 변경</li><li><b>5</b>다시 Run</li><li><b>6</b>두 그래프 비교</li></ol><p className="protocol-note">그래프의 <strong>전체 시간 구간</strong>을 함께 보세요. 앞부분만 보고 판단하면 뒤쪽에서 나타나는 변화를 놓칠 수 있습니다.</p></section>
+              <fieldset className="question"><legend><span>7</span>γ를 0.60에서 0.75로 높이면 포식자 개체군에 가장 직접적으로 나타나는 변화는?</legend><RadioCards name="gamma" value={answers.gammaPrediction} onChange={(value) => setField('gammaPrediction', value)} options={[{value:'A',label:'A',detail:'포식자가 더 오래 산다.'},{value:'B',label:'B',detail:'같은 포식자 수에서도 자연적으로 줄어드는 양이 커져, 포식자가 늘어나기에 불리해진다.'},{value:'C',label:'C',detail:'피식자의 자연 증가율이 직접 감소한다.'},{value:'D',label:'D',detail:'환경수용력이 증가한다.'}]} /><Feedback show={answers.revealed} correct={checks[5]}>γ는 포식자가 자연적으로 줄어드는 정도이므로, γ가 커지면 같은 포식자 수에서도 손실이 커져 포식자의 순증가에 불리하게 작용합니다. 다만 이것은 직접 효과이고, 실제 그래프의 최종 모습은 피식자와의 상호작용까지 함께 계산된 결과입니다.</Feedback></fieldset>
+              <section className="lab-steps" aria-labelledby="lab-steps-title">
+                <div className="lab-steps-head">
+                  <h3 id="lab-steps-title">실험실에서 확인하기</h3>
+                  <LabLink compact />
+                </div>
+                <p className="lab-steps-note">실험실은 새 탭에서 열립니다. 모두 같은 조건에서 시작하도록 아래 순서를 그대로 따라 하세요.</p>
+                <ol>
+                  <li>오른쪽 위에서 <strong>확장 모형</strong>을 고릅니다. 왼쪽 ‘사용 중인 방정식’에 <strong>환경수용력 포함</strong>이 표시되고 피식자 식이 <code>dN/dt = αN(1 − N/K) − βNP</code>로 바뀌면 됩니다.</li>
+                  <li><strong>기본값으로 돌아가기</strong>를 눌러 α 0.80, β 0.040, δ 0.020, <strong>γ 0.60</strong>, K 180, 피식자 40, 포식자 9로 맞춥니다.</li>
+                  <li><strong>실행</strong>을 눌러 20년 동안의 그래프를 보고, 모양을 기억하거나 캡처해 둡니다.</li>
+                  <li><strong>γ만 0.75</strong>로 바꾸고 다시 <strong>실행</strong>을 누릅니다. 다른 값과 초기 개체수는 그대로 둡니다.</li>
+                  <li>두 그래프를 <strong>0년부터 20년까지 전체</strong> 비교합니다. 앞부분만 보면 뒤쪽 변화를 놓칠 수 있어요.</li>
+                </ol>
+                <p className="lab-steps-note">같은 모형·같은 값·같은 초기 개체수라면 언제 실행해도 같은 그래프가 나옵니다. 결과가 다르게 보이면 다른 값이 함께 바뀌지 않았는지 확인하세요. <strong>예측 모드</strong>를 열면 기본 모형으로 바뀌니 이 활동에서는 열지 마세요.</p>
+              </section>
               <fieldset className="question"><legend><span>8</span>γ = 0.60일 때와 γ = 0.75일 때의 그래프를 비교해 기록하세요.</legend><ul className="observe-points" aria-label="비교할 관찰 포인트"><li>두 개체군이 오르내리는 <b>평균적인 수준</b></li><li>각 개체군의 <b>최고점과 최저점</b></li><li><b>진동의 크기</b>(최고점과 최저점의 차이)</li><li><b>정점이 나타나는 시점</b>과 반복되는 간격</li><li>20년 끝부분에서 어느 방향으로 가고 있는지</li></ul><div className="observation-grid"><div className="table-head">관찰 항목</div><div className="table-head">γ = 0.60 → 0.75로 바꾸었을 때</div><label>포식자가 오르내리는 평균 수준</label><select className={answers.predatorObservation ? undefined : 'is-placeholder'} value={answers.predatorObservation} onChange={(e) => setField('predatorObservation', e.target.value)}><option value="">선택</option><option>높아졌다</option><option>낮아졌다</option><option>큰 차이 없다</option></select><label>피식자가 오르내리는 평균 수준</label><select className={answers.preyObservation ? undefined : 'is-placeholder'} value={answers.preyObservation} onChange={(e) => setField('preyObservation', e.target.value)}><option value="">선택</option><option>높아졌다</option><option>낮아졌다</option><option>큰 차이 없다</option></select><label htmlFor="oscillation">진동의 모습</label><textarea id="oscillation" rows={3} value={answers.oscillationObservation} onChange={(e) => setField('oscillationObservation', e.target.value)} placeholder="최고점·최저점, 진동의 크기, 정점이 나타나는 시점을 두 그래프에서 비교해 적어 보세요." /></div>{answers.revealed && <div className="model-answer"><b>γ = 0.60과 γ = 0.75를 비교하면</b><p>γ는 포식자의 자연 사망률입니다. γ를 키우면 포식자가 늘어나기에 불리한 조건이 되고, 달라진 포식 압력이 피식자 개체군의 변화로 이어집니다. 이 활동의 조건(환경수용력 K가 포함된 확장 모형, 기본값 20년)에서는 피식자가 오르내리는 평균 수준은 높아지고 포식자가 오르내리는 평균 수준은 낮아지는 방향이 나타납니다. 다만 두 그래프가 처음부터 끝까지 단순히 위·아래로 옮겨지는 것은 아닙니다. 진동의 크기와 정점이 나타나는 시점도 함께 달라지므로 한 지점의 값이 아니라 20년 전체를 비교해야 합니다. 이 실험실은 같은 모형·같은 값·같은 초기 개체수에서 항상 같은 결과를 내므로, 두 그래프의 차이는 γ를 바꾼 효과로 해석할 수 있습니다.</p></div>}</fieldset>
               <fieldset className="question core-question"><legend><span>9</span>포식자의 사망률만 변화시켰는데 왜 피식자의 그래프도 변했을까요?</legend><p className="question-hint">이 활동의 핵심 문항입니다. 두 개체군을 서로 연결된 시스템으로 생각해 보세요.</p><label className="text-field"><textarea rows={5} value={answers.indirectReason} onChange={(e) => setField('indirectReason', e.target.value)} placeholder="포식 압력이라는 말을 사용해 설명해 보세요." /></label>{answers.revealed && <div className="model-answer emphasized"><b>핵심 해설</b><p>포식자와 피식자는 독립된 개체군이 아니라 서로 영향을 주는 시스템입니다. 포식자의 자연 사망률 변화는 포식 압력을 변화시키고, 그 결과 피식자의 개체수에도 간접적인 변화가 나타납니다. 이번 활동에서는 γ 외의 변인을 모두 고정했으므로, 두 그래프의 차이를 γ 변화의 효과와 연결해 해석할 수 있습니다.</p></div>}</fieldset>
               <details className="teacher-note">
@@ -300,13 +309,13 @@ export default function Home() {
                   <p>실험실에는 두 가지 모형이 있고, γ를 높였을 때의 <strong>장기적인 평형 해석이 서로 다릅니다.</strong> 그래서 활동 3에서는 확장 모형을 사용합니다.</p>
                   <div className="teacher-compare">
                     <div>
-                      <b>Basic model (기본 Lotka-Volterra)</b>
+                      <b>기본 모형 (Lotka-Volterra)</b>
                       <code>dN/dt = αN − βNP</code>
                       <code>N* = γ/δ,&nbsp;&nbsp;P* = α/β</code>
                       <p>기본값에서 N* = 0.60/0.02 = 30, P* = 0.8/0.04 = 20입니다. γ를 0.75로 올리면 <strong>N*는 37.5로 커지지만 P*는 20 그대로</strong>입니다. P*가 γ에 직접 의존하지 않기 때문입니다. 따라서 이 모형에서는 “γ가 커지면 포식자가 장기적으로 항상 줄어든다”고 말할 수 없습니다.</p>
                     </div>
                     <div>
-                      <b>More realistic model (환경수용력 K 포함)</b>
+                      <b>확장 모형 (환경수용력 K 포함)</b>
                       <code>dN/dt = αN(1 − N/K) − βNP</code>
                       <code>N* = γ/δ,&nbsp;&nbsp;P* = (α/β)(1 − γ/(δK))</code>
                       <p>K = 180인 기본값에서 γ = 0.60이면 N* = 30, P* ≈ 16.7이고, γ = 0.75이면 N* = 37.5, P* ≈ 15.8입니다. 공존이 가능한 범위(γ/δ &lt; K)에서 γ가 커지면 <strong>피식자 평형은 올라가고 포식자 평형은 내려갑니다.</strong></p>
@@ -334,8 +343,13 @@ export default function Home() {
           </article>
 
           <section className="finish-card" id="answer-summary">
-            <div><p className="activity-kicker">활동 마무리</p><h2>답안을 확인하고 생각을 다듬어 보세요.</h2><p>버튼을 누르면 객관식·순서 배열·빈칸은 확인 결과를, 서술형은 핵심 개념을 보여줍니다. 작성한 답변은 그대로 유지됩니다.</p></div>
-            {!answers.revealed ? <button type="button" className="reveal-button" onClick={revealAnswers}>답안 확인하기 <span aria-hidden="true">→</span></button> : <div className="score-summary"><span>핵심 문항</span><b>7개 중 {score}개 확인</b><small>점수가 아니라 다시 살펴볼 곳을 찾는 안내입니다.</small></div>}
+            <div>
+              <h2>다 풀었으면 답을 확인해 보세요</h2>
+              <p>고르는 문항은 맞았는지 바로 알려 주고, 쓰는 문항은 설명에 들어가면 좋은 내용을 보여 줍니다. 내가 쓴 답은 지워지지 않아요.</p>
+            </div>
+            {!answers.revealed
+              ? <button type="button" className="reveal-button" onClick={revealAnswers}>답 확인하기</button>
+              : <div className="score-summary" role="status"><b>고르는 문항 7개 중 {score}개 맞음</b><small>{score === 7 ? '모두 맞았어요. 쓰는 문항의 설명도 비교해 보세요.' : '주황색 상자가 붙은 문항을 다시 읽고 고쳐 보세요. 답을 고치면 확인 결과가 사라지니, 다시 눌러 확인하세요.'}</small></div>}
           </section>
           <AdvancedChallenge
             answers={answers}
@@ -345,7 +359,7 @@ export default function Home() {
             onChange={setAdvancedField}
             onReveal={revealAdvancedAnswers}
           />
-          <footer><p>이 학습지는 시뮬레이션 결과를 해석하기 위한 활동지입니다. 시뮬레이션은 현실 생태계를 단순화한 수학적 모델입니다.</p><div className="footer-brand"><strong>HAFS Biology Lab</strong><span>Teacher-built interactive science tools · CH Park</span></div><span data-page-views="" hidden /><button type="button" onClick={resetWorksheet}>학습지 초기화</button></footer>
+          <footer><p>이 학습지는 시뮬레이션 결과를 해석하기 위한 활동지입니다. 시뮬레이션은 현실 생태계를 단순화한 수학적 모델입니다.</p><div className="footer-brand"><strong>HAFS Biology Lab</strong><span>Teacher-built interactive science tools · CH Park</span></div><span data-page-views="" hidden /><button type="button" onClick={resetWorksheet}>쓴 답 모두 지우기</button></footer>
         </section>
       </div>
     </main>
