@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import AdvancedChallenge from './AdvancedChallenge';
 import {
   advancedObjectiveChecks,
@@ -111,6 +111,9 @@ export default function Home() {
   const [hintOpen, setHintOpen] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [draggedEvent, setDraggedEvent] = useState<string | null>(null);
+  const [sortAnnouncement, setSortAnnouncement] = useState('');
+  const sortItems = useRef(new Map<string, HTMLLIElement>());
+  const pendingSort = useRef<{ movedId: string; tops: Map<string, number> } | null>(null);
 
   useEffect(() => {
     const restore = window.setTimeout(() => {
@@ -159,12 +162,42 @@ export default function Home() {
   const score = checks.filter(Boolean).length;
   const completedCount = completion.filter(Boolean).length;
 
+  // 순서가 바뀌면 카드가 새 자리로 미끄러지고, 옮긴 카드가 잠시 초록으로 강조됩니다.
+  // 바뀌기 직전 위치를 기억해 두었다가(FLIP) 새 배치에서 그 차이만큼 되돌려 놓고 0으로 움직입니다.
+  const commitEventOrder = (next: string[], movedId: string) => {
+    const tops = new Map<string, number>();
+    sortItems.current.forEach((item, id) => tops.set(id, item.getBoundingClientRect().top));
+    pendingSort.current = { movedId, tops };
+    setField('eventOrder', next);
+    setSortAnnouncement(`${eventLabels[movedId]} 카드를 ${next.indexOf(movedId) + 1}번째로 옮겼습니다.`);
+  };
+
+  useLayoutEffect(() => {
+    const pending = pendingSort.current;
+    if (!pending) return;
+    pendingSort.current = null;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // 빠르게 연달아 누르면 이전 애니메이션을 멈추고 지금 보이는 위치에서 다시 출발합니다.
+    sortItems.current.forEach((item) => item.getAnimations({ subtree: true }).forEach((animation) => animation.cancel()));
+    sortItems.current.forEach((item, id) => {
+      const shift = (pending.tops.get(id) ?? 0) - item.getBoundingClientRect().top;
+      if (!shift || reduceMotion) return;
+      item.animate([{ transform: `translateY(${shift}px)` }, { transform: 'translateY(0)' }], { duration: 380, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' });
+    });
+    const moved = sortItems.current.get(pending.movedId);
+    if (!moved) return;
+    const style = getComputedStyle(moved);
+    const highlight = { backgroundColor: style.getPropertyValue('--green-soft').trim(), borderColor: style.getPropertyValue('--green').trim(), boxShadow: '0 0 0 3px rgba(31, 106, 72, 0.25)' };
+    moved.animate([{ ...highlight, zIndex: 1 }, { ...highlight, zIndex: 1, offset: 0.55 }, { zIndex: 1 }], { duration: 1600, easing: 'ease-out' });
+    if (!reduceMotion) moved.querySelector('b')?.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.35)', offset: 0.4 }, { transform: 'scale(1)' }], { duration: 450, delay: 150, easing: 'ease-out' });
+  }, [answers.eventOrder]);
+
   const moveEvent = (index: number, direction: -1 | 1) => {
     const target = index + direction;
     if (target < 0 || target >= answers.eventOrder.length) return;
     const next = [...answers.eventOrder];
     [next[index], next[target]] = [next[target], next[index]];
-    setField('eventOrder', next);
+    commitEventOrder(next, next[target]);
   };
 
   const dropEvent = (targetId: string) => {
@@ -174,7 +207,7 @@ export default function Home() {
     const target = next.indexOf(targetId);
     next.splice(from, 1);
     next.splice(target, 0, draggedEvent);
-    setField('eventOrder', next);
+    commitEventOrder(next, draggedEvent);
     setDraggedEvent(null);
   };
 
@@ -269,8 +302,8 @@ export default function Home() {
             <p className="activity-lead">카드를 끌거나 위아래 버튼을 눌러 전형적인 변화 순서로 배열하세요. 이 순서는 모든 순간에 한 집단만 변한다는 뜻은 아닙니다.</p>
             <div className="questions">
               <fieldset className="question"><legend><span>4</span>피식자 증가에서 시작하도록 사건의 순서를 배열하세요.</legend><ol className="sort-list">
-                {answers.eventOrder.map((eventId, index) => <li key={eventId} draggable onDragStart={() => setDraggedEvent(eventId)} onDragEnd={() => setDraggedEvent(null)} onDragOver={(e) => e.preventDefault()} onDrop={() => dropEvent(eventId)} className={draggedEvent === eventId ? 'dragging' : ''}><span className="drag-handle" aria-hidden="true">⠿</span><b>{index + 1}</b><span>{eventLabels[eventId]}</span><div><button type="button" onClick={() => moveEvent(index, -1)} disabled={index === 0} aria-label={`${eventLabels[eventId]} 위로 이동`}>↑</button><button type="button" onClick={() => moveEvent(index, 1)} disabled={index === answers.eventOrder.length - 1} aria-label={`${eventLabels[eventId]} 아래로 이동`}>↓</button></div></li>)}
-              </ol><Feedback show={answers.revealed} correct={checks[3]}>피식자 증가 → 포식자 증가 → 피식자 감소 → 포식자 감소의 순서로 음성 피드백 순환이 이어집니다.</Feedback></fieldset>
+                {answers.eventOrder.map((eventId, index) => <li key={eventId} ref={(item) => { if (item) sortItems.current.set(eventId, item); else sortItems.current.delete(eventId); }} draggable onDragStart={() => setDraggedEvent(eventId)} onDragEnd={() => setDraggedEvent(null)} onDragOver={(e) => e.preventDefault()} onDrop={() => dropEvent(eventId)} className={draggedEvent === eventId ? 'dragging' : ''}><span className="drag-handle" aria-hidden="true">⠿</span><b>{index + 1}</b><span>{eventLabels[eventId]}</span><div><button type="button" onClick={() => moveEvent(index, -1)} disabled={index === 0} aria-label={`${eventLabels[eventId]} 위로 이동`}>↑</button><button type="button" onClick={() => moveEvent(index, 1)} disabled={index === answers.eventOrder.length - 1} aria-label={`${eventLabels[eventId]} 아래로 이동`}>↓</button></div></li>)}
+              </ol><p className="visually-hidden" aria-live="polite">{sortAnnouncement}</p><Feedback show={answers.revealed} correct={checks[3]}>피식자 증가 → 포식자 증가 → 피식자 감소 → 포식자 감소의 순서로 음성 피드백 순환이 이어집니다.</Feedback></fieldset>
               <fieldset className="question"><legend><span>5</span>문장의 빈칸을 채워 순환을 완성하세요.</legend><div className="fill-story">
                 <p>피식자의 수가 증가하면 포식자가 이용할 수 있는 <select aria-label="첫 번째 빈칸" value={answers.blankFood} onChange={(e) => setField('blankFood', e.target.value)}><option value="">선택</option><option>먹이</option><option>공간</option><option>천적</option></select>가 많아진다.</p>
                 <p>그 결과 일정 시간이 지나면 포식자의 수가 <select aria-label="두 번째 빈칸" value={answers.blankPredatorUp} onChange={(e) => setField('blankPredatorUp', e.target.value)}><option value="">선택</option><option>증가</option><option>감소</option></select>한다.</p>
